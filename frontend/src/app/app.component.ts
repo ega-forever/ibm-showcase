@@ -5,6 +5,11 @@ import contract from 'truffle-contract';
 import * as UserHolder from '../../../truffle/build/contracts/UserHolder.json';
 import Tx from 'ethereumjs-tx';
 import Wallet from 'ethereumjs-wallet';
+import request from 'request-promise';
+import config from '../config'
+import url from 'url';
+import _ from 'lodash';
+import promisify from 'es6-promisify';
 
 @Component({
   selector: 'app-root',
@@ -13,26 +18,40 @@ import Wallet from 'ethereumjs-wallet';
 })
 export class AppComponent {
   title = 'app';
-  privateKey = 'be580bf5d264c40d9eac90540c9d4f8a62c37c28c13b7658cbad11d5d0baec9a';
-  isValid = false;
+  privateKey = '';
+  wallet = null;
+  isValidPrivateKey = false;
+  isValidProfileUrl = false;
   chosenYear = null;
   calculatedCost = 0;
   savedCost = 0;
+  userProfileURL = null;
   web3Provider = null;
   userHolderInstance = null;
-  predictedCharge = 65; //todo remove
 
   onPrivateKeyInput(ev) {
     try {
-      Wallet.fromPrivateKey(Buffer.from(this.privateKey, 'hex'));
-      this.isValid = true;
+      this.wallet = (<any>Wallet).fromPrivateKey(Buffer.from(this.privateKey, 'hex'));
+      this.isValidPrivateKey = true;
     } catch (e) {
-      this.isValid = false;
+      this.isValidPrivateKey = false;
     }
   }
 
+
+  onProfileInput(ev) {
+    try {
+      let result = url.parse(this.userProfileURL);
+      this.isValidProfileUrl = result && !!result.hostname;
+    } catch (e) {
+      this.isValidProfileUrl = false;
+    }
+  }
+
+
+
   constructor() {
-    this.web3Provider = new Web3.providers.HttpProvider("http://localhost:8545");
+    this.web3Provider = new Web3.providers.HttpProvider((<any>config).rpc);
     let userHolder = contract(UserHolder);
     userHolder.setProvider(this.web3Provider);
 
@@ -42,25 +61,40 @@ export class AppComponent {
   }
 
 
-  calculate(){
-    this.calculatedCost = this.predictedCharge * (this.chosenYear - new Date().getFullYear() + 1) * 365;
-    console.log(this.calculatedCost);
+  async calculate() {
+    let cogCoefs = await request({
+      method: 'GET',
+      uri: `${config.rest}/cognitive/0x${this.wallet.getAddress().toString('hex')}/calculate?profile_url=${this.userProfileURL}`,
+      json: true
+    });
+
+    let coef = _.chain(cogCoefs)
+      .get('coefs', [])
+      .map(coef=>coef.weight * coef.score)
+      .sum()
+      .value();
+
+    let rate = await request({
+      method: 'GET',
+      uri: `${config.rest}/prediction/${this.chosenYear}/rub`,
+      json: true
+    });
+
+
+    this.calculatedCost = _.get(rate, 'expected_rate', 60) * (this.chosenYear - new Date().getFullYear() + 1) * 365 * (1 - 0.2 * coef);
+
   }
 
-  savePreference(cost, year) {
-
-    let wallet = Wallet.fromPrivateKey(Buffer.from(this.privateKey, 'hex'));
-
+  async savePreference(cost, year) {
 
     let web3 = new Web3(this.web3Provider);
     let contract = web3.eth.contract((<any>UserHolder).abi);
-    console.log(this.userHolderInstance.address)
     let data = contract.at(this.userHolderInstance.address).addClient.getData(cost, year);
     const gasPrice = web3.eth.gasPrice;
     const gasPriceHex = web3.toHex(gasPrice);
     const gasLimitHex = web3.toHex(3000000);
 
-    const nonce = web3.eth.getTransactionCount(`0x${wallet.getAddress().toString('hex')}`);
+    const nonce = web3.eth.getTransactionCount(`0x${this.wallet.getAddress().toString('hex')}`);
     const nonceHex = web3.toHex(nonce);
 
     const rawTx = {
@@ -68,18 +102,15 @@ export class AppComponent {
       gasPrice: gasPriceHex,
       gasLimit: gasLimitHex,
       data: data,
-      from: `0x${wallet.getAddress().toString('hex')}`,
+      from: `0x${this.wallet.getAddress().toString('hex')}`,
       to: this.userHolderInstance.address
     };
 
     const tx = new Tx(rawTx);
-    tx.sign(wallet.getPrivateKey());
+    tx.sign(this.wallet.getPrivateKey());
     const serializedTx = tx.serialize();
-
-    web3.eth.sendRawTransaction(serializedTx.toString('hex'), (err, hash) => {
-      console.log('contract creation tx: ' + hash);
-    });
-
+    await promisify(web3.eth.sendRawTransaction)(serializedTx.toString('hex'));
+    this.savedCost = this.calculatedCost;
 
   }
 
@@ -89,9 +120,8 @@ export class AppComponent {
   }
 
   async getContractCostByYear(year) {
-    let wallet = Wallet.fromPrivateKey(Buffer.from(this.privateKey, 'hex'));
-    let cost = await this.userHolderInstance.getCost.call(year, {from: `0x${wallet.getAddress().toString('hex')}`});
-    return cost.toString();
+    let cost = await this.userHolderInstance.getCost.call(year, {from: `0x${this.wallet.getAddress().toString('hex')}`});
+    return parseInt(cost.toString());
   }
 
 }
