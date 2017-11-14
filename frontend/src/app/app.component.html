@@ -4,13 +4,13 @@
   <div class="row">
     <div class="col-sm-9">
       <div class="jumbotron">
-        <h1 class="display-4">Jumbotron {{title}}!</h1>
+        <h1 class="display-4">Calculator</h1>
 
         <form style="padding-top: 20px">
           <div class="form-group row">
             <label for="private_key" class="col-sm-2 col-form-label">Private key</label>
             <div class="col-sm-10">
-              <input name="privateKey" [(ngModel)]="privateKey" (ngModelChange)="onPrivateKeyInput($event)"
+              <input name="privateKey" [(ngModel)]="form.privateKey" (ngModelChange)="onPrivateKeyInput($event)"
                      type="password" class="form-control" id="private_key" placeholder="private key">
             </div>
           </div>
@@ -18,7 +18,8 @@
             <div class="row">
               <legend class="col-form-legend col-sm-2">Year</legend>
               <div class="col-sm-10">
-                <select [disabled]="!isValidPrivateKey" name="year" [(ngModel)]="year" class="form-control" id="year"
+                <select [disabled]="!isValidPrivateKey" name="year" class="form-control" id="year"
+                        [(ngModel)]="form.chosenYear"
                         (change)="onSetYear($event.target.value)">
                   <option *ngFor="let item of [2017, 2018];" value="{{item}}">{{item}}</option>
                 </select>
@@ -28,10 +29,36 @@
           <div class="form-group row">
             <label for="private_key" class="col-sm-2 col-form-label">Profile URL</label>
             <div class="col-sm-10">
-              <input name="userProfile" [(ngModel)]="userProfileURL" (ngModelChange)="onProfileInput($event)"
+              <input name="userProfile" [(ngModel)]="form.userProfileURL" (ngModelChange)="onProfileInput($event)"
                      type="test" class="form-control" id="user_profile" placeholder="user profile link">
             </div>
           </div>
+
+
+          <div class="form-group row">
+            <label for="brand" class="col-sm-2 col-form-label">Brand</label>
+            <div class="col-sm-10">
+              <select [disabled]="!isValidPrivateKey" name="brand" class="form-control" id="brand"
+                      [(ngModel)]="form.brand"
+                      (change)="onSetBrand($event.target.value)">
+                <option *ngFor="let item of data.brands;" value="{{item.value}}">{{item.name}}</option>
+              </select>
+            </div>
+          </div>
+
+
+          <div class="form-group row">
+            <label for="model" class="col-sm-2 col-form-label">Model</label>
+            <div class="col-sm-10">
+              <select [disabled]="!isValidPrivateKey" name="model" class="form-control" id="model"
+                      [(ngModel)]="form.model"
+                      (change)="onSetModel($event.target.value)">
+                <option *ngFor="let item of data.models;" value="{{item.value}}">{{item.name}}</option>
+              </select>
+            </div>
+          </div>
+
+
           <div class="form-group row">
             <div class="col-sm-10">
               <button [disabled]="!isValidPrivateKey || !isValidProfileUrl ||this.savedCost" type="button" class="btn btn-primary" (click)="calculate()">
@@ -47,10 +74,11 @@
       <div class="card" style="width: 20rem;">
         <div class="card-body">
           <h4 class="card-title">Plan calculator</h4>
-          <p class="card-text">year: {{chosenYear}}</p>
+          <p class="card-text">year: {{form.chosenYear}}</p>
           <p class="card-text">cost: {{calculatedCost || savedCost | number: '1.2'}} rub</p>
+          <p class="card-text">middle car cost: {{carPrice | number: '1.2'}} rub</p>
           <button *ngIf="!savedCost" type="button" [disabled]="!isValidPrivateKey || !isValidProfileUrl || !calculatedCost" class="btn btn-primary"
-                  (click)="savePreference(calculatedCost, chosenYear)">Buy
+                  (click)="save()">Buy
           </button>
           <button *ngIf="savedCost" type="button" class="btn btn-secondary">Already bought</button>
 
