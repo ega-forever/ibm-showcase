@@ -19,7 +19,10 @@ export class AppComponent {
     chosenYear: null,
     userProfileURL: null,
     brand: null,
-    model: null
+    model: null,
+    accident: null,
+    age: null,
+    horsepower: null
   };
   wallet = null;
   isValidPrivateKey = false;
@@ -28,7 +31,21 @@ export class AppComponent {
   savedCost = 0;
   data = {
     brands: [],
-    models: []
+    models: [],
+    accident: [{name: 'no', value: 1}, {name: 'yes', value: 0}],
+    engine: [
+      {name: '50-70', value: 0.9},
+      {name: '100', value: 1},
+      {name: '120', value: 1.2},
+      {name: '150', value: 1.4},
+      {name: '>160', value: 1.6}
+      ],
+    age: [
+      {name: '1', value: 1.8},
+      {name: '2', value: 1.4},
+      {name: '3', value: 1.2},
+      {name: '>3', value: 1},
+    ]
   };
   carPrice: null;
 
@@ -74,7 +91,13 @@ export class AppComponent {
   }
 
   async calculate(){
-    this.calculatedCost = await this.calcService.calculate(this.wallet, this.form.chosenYear, this.form.userProfileURL);
+    this.calculatedCost = await this.calcService.calculate(
+      this.wallet,
+      this.form.chosenYear,
+      this.form.age,
+      this.form.horsepower,
+      this.form.accident,
+      this.form.userProfileURL);
   }
 
   async save() {
