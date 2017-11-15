@@ -45,7 +45,8 @@ export class ContractService {
     const tx = new Tx(rawTx);
     tx.sign(wallet.getPrivateKey());
     const serializedTx = tx.serialize();
-    await promisify(web3.eth.sendRawTransaction)(serializedTx.toString('hex'));
+    let hash = await promisify(web3.eth.sendRawTransaction)(`0x${serializedTx.toString('hex')}`);
+    localStorage.setItem('hash', hash);
   }
 
 

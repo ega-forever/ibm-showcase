@@ -5,6 +5,7 @@ import url from "url";
 import _ from "lodash";
 import {ContractService} from "../services/contractService";
 import {CalcService} from "../services/calcService";
+import {HttpClient} from "@angular/common/http";
 declare const Buffer;
 
 @Component({
@@ -71,7 +72,7 @@ export class AppComponent {
 
   constructor(public carService: CarService, public contractService: ContractService, public calcService: CalcService) {
     this.carService.getBrands()
-      .then(brands => this.data.brands = brands);
+      .then(brands => this.data.brands = <any>brands);
   }
 
 
@@ -81,7 +82,7 @@ export class AppComponent {
   }
 
   async onSetBrand() {
-    this.data.models = await this.carService.getModels(this.form.brand);
+    this.data.models = await <any>this.carService.getModels(this.form.brand);
   }
 
   async onSetModel() {

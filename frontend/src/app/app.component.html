@@ -26,7 +26,9 @@
               </div>
             </div>
           </fieldset>
-          <div class="form-group row">
+
+
+          <div *ngIf="!this.savedCost" class="form-group row">
             <label for="private_key" class="col-sm-2 col-form-label">Profile URL</label>
             <div class="col-sm-10">
               <input name="userProfile" [(ngModel)]="form.userProfileURL" (ngModelChange)="onProfileInput($event)"
@@ -35,7 +37,7 @@
           </div>
 
 
-          <div class="form-group row">
+          <div *ngIf="!this.savedCost" class="form-group row">
             <label for="brand" class="col-sm-2 col-form-label">Brand</label>
             <div class="col-sm-10">
               <select [disabled]="!isValidPrivateKey" name="brand" class="form-control" id="brand"
@@ -47,7 +49,7 @@
           </div>
 
 
-          <div class="form-group row">
+          <div *ngIf="!this.savedCost" class="form-group row">
             <label for="model" class="col-sm-2 col-form-label">Model</label>
             <div class="col-sm-10">
               <select [disabled]="!isValidPrivateKey" name="model" class="form-control" id="model"
@@ -59,7 +61,7 @@
           </div>
 
 
-          <div class="form-group row">
+          <div *ngIf="!this.savedCost" class="form-group row">
             <label for="model" class="col-sm-2 col-form-label">Was an accident</label>
             <div class="col-sm-10">
               <select [disabled]="!isValidPrivateKey" name="model" class="form-control" id="accident"
@@ -70,7 +72,7 @@
           </div>
 
 
-          <div class="form-group row">
+          <div *ngIf="!this.savedCost" class="form-group row">
             <label for="model" class="col-sm-2 col-form-label">Engine (horsepower)</label>
             <div class="col-sm-10">
               <select [disabled]="!isValidPrivateKey" name="model" class="form-control" id="engine"
@@ -81,7 +83,7 @@
           </div>
 
 
-          <div class="form-group row">
+          <div *ngIf="!this.savedCost" class="form-group row">
             <label for="model" class="col-sm-2 col-form-label">Driver's age</label>
             <div class="col-sm-10">
               <select [disabled]="!isValidPrivateKey" name="model" class="form-control" id="age"
